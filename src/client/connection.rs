@@ -33,7 +33,7 @@ use pretty_hex::*;
 use std::ops::Deref;
 use std::{cmp, fmt::Debug, io, pin::Pin, task};
 use task::Poll;
-use tracing::{event, Level};
+
 #[cfg(all(windows, feature = "winauth"))]
 use winauth::{windows::NtlmSspiBuilder, NextBytes};
 
@@ -129,8 +129,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
     ))]
     fn post_login_encryption(mut self, encryption: EncryptionLevel) -> Self {
         if let EncryptionLevel::Off = encryption {
-            event!(
-                Level::WARN,
+            log::warn!(
                 "Turning TLS off after a login. All traffic from here on is not encrypted.",
             );
 
@@ -178,8 +177,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
                 header.set_status(PacketStatus::NormalMessage);
             }
 
-            event!(
-                Level::TRACE,
+            log::trace!(
                 "Sending a packet ({} bytes)",
                 split_payload.len() + HEADER_BYTES,
             );
@@ -231,8 +229,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
         }
 
         while let Some(packet) = self.try_next().await? {
-            event!(
-                Level::WARN,
+            log::warn!(
                 "Flushing unhandled packet from the wire. Please consume your streams!",
             );
 
@@ -321,7 +318,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
 
                 match client.next_bytes(Some(sspi_bytes.as_ref()))? {
                     Some(sspi_response) => {
-                        event!(Level::TRACE, sspi_response_len = sspi_response.len());
+                        log::trace!("sspi_response_len = {}", sspi_response.len());
 
                         let id = self.context.next_packet_id();
                         let header = PacketHeader::login(id);
@@ -359,11 +356,11 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
 
                 let next_token = match ctx.step(Some(auth_bytes.as_ref()))? {
                     Some(response) => {
-                        event!(Level::TRACE, response_len = response.len());
+                        log::trace!(response_len = response.len());
                         TokenSspi::new(Vec::from(response.deref()))
                     }
                     None => {
-                        event!(Level::TRACE, response_len = 0);
+                        log::trace!(response_len = 0);
                         TokenSspi::new(Vec::new())
                     }
                 };
@@ -390,7 +387,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
 
                 match client.next_bytes(Some(sspi_bytes.as_ref()))? {
                     Some(sspi_response) => {
-                        event!(Level::TRACE, sspi_response_len = sspi_response.len());
+                        log::trace!("sspi_response_len = {}", sspi_response.len());
 
                         let id = self.context.next_packet_id();
                         let header = PacketHeader::login(id);
@@ -437,7 +434,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
         encryption: EncryptionLevel,
     ) -> crate::Result<Self> {
         if encryption != EncryptionLevel::NotSupported {
-            event!(Level::INFO, "Performing a TLS handshake");
+            log::info!("Performing a TLS handshake");
 
             let Self {
                 transport, context, ..
@@ -450,7 +447,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
             };
 
             stream.get_mut().handshake_complete();
-            event!(Level::INFO, "TLS handshake successful");
+            log::info!("TLS handshake successful");
 
             let transport = Framed::new(MaybeTlsStream::Tls(stream), PacketCodec);
 
@@ -461,8 +458,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
                 buf: BytesMut::new(),
             })
         } else {
-            event!(
-                Level::WARN,
+            log::warn!(
                 "TLS encryption is not enabled. All traffic including the login credentials are not encrypted."
             );
 
@@ -477,8 +473,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
         feature = "vendored-openssl"
     )))]
     async fn tls_handshake(self, _: &Config, _: EncryptionLevel) -> crate::Result<Self> {
-        event!(
-            Level::WARN,
+        log::warn!(
             "TLS encryption is not enabled. All traffic including the login credentials are not encrypted."
         );
 

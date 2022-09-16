@@ -2265,7 +2265,7 @@ where
 #[cfg(feature = "sql-browser-async-std")]
 fn cyrillic_collations_should_work() -> Result<()> {
     LOGGER_SETUP.call_once(|| {
-        env_logger::init();
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
     });
 
     async_std::task::block_on(async {
@@ -2326,7 +2326,7 @@ fn cyrillic_collations_should_work() -> Result<()> {
 #[cfg(feature = "sql-browser-async-std")]
 fn application_name_should_be_set_correctly() -> Result<()> {
     LOGGER_SETUP.call_once(|| {
-        env_logger::init();
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
     });
 
     async_std::task::block_on(async {

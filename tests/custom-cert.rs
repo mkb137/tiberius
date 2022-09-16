@@ -15,7 +15,7 @@ static LOGGER_SETUP: Once = Once::new();
 ))]
 fn connect_to_custom_cert_instance_ado() -> Result<()> {
     LOGGER_SETUP.call_once(|| {
-        env_logger::init();
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
     });
 
     let rt = Runtime::new()?;
@@ -51,7 +51,7 @@ fn connect_to_custom_cert_instance_ado() -> Result<()> {
 ))]
 fn connect_to_custom_cert_instance_jdbc() -> Result<()> {
     LOGGER_SETUP.call_once(|| {
-        env_logger::init();
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
     });
 
     let rt = Runtime::new()?;
@@ -82,7 +82,7 @@ fn connect_to_custom_cert_instance_jdbc() -> Result<()> {
 #[test]
 fn connect_to_custom_cert_instance_without_ca() -> Result<()> {
     LOGGER_SETUP.call_once(|| {
-        env_logger::init();
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
     });
 
     let rt = Runtime::new()?;

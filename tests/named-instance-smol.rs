@@ -26,7 +26,7 @@ static NAMED_INSTANCE_CONN_STR: Lazy<String> = Lazy::new(|| {
 #[test]
 fn connect_to_named_instance() -> Result<()> {
     LOGGER_SETUP.call_once(|| {
-        env_logger::init();
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
     });
 
     futures_lite::future::block_on(async {

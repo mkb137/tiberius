@@ -16,7 +16,7 @@ use std::{
     pin::Pin,
     task::{self, Poll},
 };
-use tracing::{event, Level};
+
 
 /// A wrapper to handle either TLS or bare connections.
 pub(crate) enum MaybeTlsStream<S: AsyncRead + AsyncWrite + Unpin + Send> {
@@ -187,8 +187,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> AsyncRead for TlsPreloginWrapper<
             // And we know from this point on how much data we should expect
             inner.read_remaining = header.length() as usize - HEADER_BYTES;
 
-            event!(
-                Level::TRACE,
+            log::trace!(
                 "Reading packet of {} bytes",
                 inner.read_remaining,
             );
@@ -251,8 +250,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> AsyncWrite for TlsPreloginWrapper
             }
 
             while !inner.wr_buf.is_empty() {
-                event!(
-                    Level::TRACE,
+                log::trace!(
                     "Writing a packet of {} bytes",
                     inner.wr_buf.len(),
                 );

@@ -9,7 +9,7 @@ use crate::{
 };
 use futures::{stream::BoxStream, AsyncRead, AsyncWrite, TryStreamExt};
 use std::{convert::TryFrom, sync::Arc};
-use tracing::{event, Level};
+
 
 #[derive(Debug)]
 pub enum ReceivedToken {
@@ -77,7 +77,7 @@ where
         let meta = Arc::new(TokenColMetaData::decode(self.conn).await?);
         self.conn.context_mut().set_last_meta(meta.clone());
 
-        event!(Level::TRACE, ?meta);
+        log::trace!("meta = {:?}", meta);
 
         Ok(ReceivedToken::NewResultset(meta))
     }
@@ -85,20 +85,20 @@ where
     async fn get_row(&mut self) -> crate::Result<ReceivedToken> {
         let return_value = TokenRow::decode(self.conn).await?;
 
-        event!(Level::TRACE, message = ?return_value);
+        log::trace!("return_value = {:?}", return_value);
         Ok(ReceivedToken::Row(return_value))
     }
 
     async fn get_nbc_row(&mut self) -> crate::Result<ReceivedToken> {
         let return_value = TokenRow::decode_nbc(self.conn).await?;
 
-        event!(Level::TRACE, message = ?return_value);
+        log::trace!("return_value = {:?}", return_value);
         Ok(ReceivedToken::Row(return_value))
     }
 
     async fn get_return_value(&mut self) -> crate::Result<ReceivedToken> {
         let return_value = TokenReturnValue::decode(self.conn).await?;
-        event!(Level::TRACE, message = ?return_value);
+        log::trace!("return_value = {:?}", return_value);
         Ok(ReceivedToken::ReturnValue(return_value))
     }
 
@@ -109,31 +109,32 @@ where
 
     async fn get_error(&mut self) -> crate::Result<ReceivedToken> {
         let err = TokenError::decode(self.conn).await?;
-        event!(Level::ERROR, message = %err.message, code = err.code);
+        log::error!("message = {}, code = {:?}", err.message, err.code);
+
         Err(Error::Server(err))
     }
 
     async fn get_order(&mut self) -> crate::Result<ReceivedToken> {
         let order = TokenOrder::decode(self.conn).await?;
-        event!(Level::TRACE, message = ?order);
+        log::trace!("order = {:?}", order);
         Ok(ReceivedToken::Order(order))
     }
 
     async fn get_done_value(&mut self) -> crate::Result<ReceivedToken> {
         let done = TokenDone::decode(self.conn).await?;
-        event!(Level::TRACE, "{}", done);
+        log::trace!("done = {:?}", done);
         Ok(ReceivedToken::Done(done))
     }
 
     async fn get_done_proc_value(&mut self) -> crate::Result<ReceivedToken> {
         let done = TokenDone::decode(self.conn).await?;
-        event!(Level::TRACE, "{}", done);
+        log::trace!("done = {:?}", done);
         Ok(ReceivedToken::DoneProc(done))
     }
 
     async fn get_done_in_proc_value(&mut self) -> crate::Result<ReceivedToken> {
         let done = TokenDone::decode(self.conn).await?;
-        event!(Level::TRACE, "{}", done);
+        log::trace!("done = {:?}", done);
         Ok(ReceivedToken::DoneInProc(done))
     }
 
@@ -155,27 +156,26 @@ where
             _ => (),
         }
 
-        event!(Level::INFO, "{}", change);
+       log::info!("change = {:?}", change);
 
         Ok(ReceivedToken::EnvChange(change))
     }
 
     async fn get_info(&mut self) -> crate::Result<ReceivedToken> {
         let info = TokenInfo::decode(self.conn).await?;
-        event!(Level::INFO, "{}", info.message);
+       log::info!("info.messag = {:?}", info.message);
         Ok(ReceivedToken::Info(info))
     }
 
     async fn get_login_ack(&mut self) -> crate::Result<ReceivedToken> {
         let ack = TokenLoginAck::decode(self.conn).await?;
-        event!(Level::INFO, "{} version {}", ack.prog_name, ack.version);
+       log::info!("{} version {:?}", ack.prog_name, ack.version);
         Ok(ReceivedToken::LoginAck(ack))
     }
 
     async fn get_feature_ext_ack(&mut self) -> crate::Result<ReceivedToken> {
         let ack = TokenFeatureExtAck::decode(self.conn).await?;
-        event!(
-            Level::INFO,
+        log::info!(
             "FeatureExtAck with {} features",
             ack.features.len()
         );
@@ -184,7 +184,7 @@ where
 
     async fn get_sspi(&mut self) -> crate::Result<ReceivedToken> {
         let sspi = TokenSspi::decode_async(self.conn).await?;
-        event!(Level::TRACE, "SSPI response");
+        log::trace!("SSPI response");
         Ok(ReceivedToken::Sspi(sspi))
     }
 

@@ -1,6 +1,6 @@
 use asynchronous_codec::BytesMut;
 use futures::{AsyncRead, AsyncWrite};
-use tracing::{event, Level};
+
 
 use crate::{
     client::Connection, sql_read_bytes::SqlReadBytes, BytesMutWithDataColumns, ExecuteResult,
@@ -68,8 +68,7 @@ where
             let header = PacketHeader::bulk_load(self.packet_id);
             let data = self.buf.split_to(packet_size);
 
-            event!(
-                Level::TRACE,
+            log::trace!(
                 "Bulk insert packet ({} bytes)",
                 data.len() + HEADER_BYTES,
             );
@@ -93,8 +92,7 @@ where
 
         let data = self.buf.split();
 
-        event!(
-            Level::TRACE,
+        log::trace!(
             "Finalizing a bulk insert ({} bytes)",
             data.len() + HEADER_BYTES,
         );

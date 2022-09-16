@@ -4,7 +4,6 @@ use std::env;
 use tiberius::{Client, Config, IntoRow};
 use tokio::net::TcpStream;
 use tokio_util::compat::TokioAsyncWriteCompatExt;
-use tracing::log::info;
 
 static CONN_STR: Lazy<String> = Lazy::new(|| {
     env::var("TIBERIUS_TEST_CONNECTION_STRING").unwrap_or_else(|_| {
@@ -14,7 +13,7 @@ static CONN_STR: Lazy<String> = Lazy::new(|| {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    env_logger::init();
+    log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
 
     let config = Config::from_ado_string(&CONN_STR)?;
 
@@ -26,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
     client
         .execute("DROP TABLE IF EXISTS bulk_test1", &[])
         .await?;
-    info!("drop table");
+    log::info!("drop table");
     client
         .execute(
             r#"CREATE TABLE bulk_test1 (
@@ -37,7 +36,7 @@ async fn main() -> anyhow::Result<()> {
             &[],
         )
         .await?;
-    info!("create table done");
+    log::info!("create table done");
 
     let mut req = client.bulk_insert("bulk_test1").await?;
 
@@ -45,7 +44,7 @@ async fn main() -> anyhow::Result<()> {
 
     let pb = ProgressBar::new(count as u64);
 
-    info!("start loading data");
+    log::info!("start loading data");
     for i in 0..1000 {
         let int_column = [Some(32), None][i % 2];
         let float_column = [Some(34f32), None][i % 2];
@@ -61,7 +60,7 @@ async fn main() -> anyhow::Result<()> {
 
     let res = req.finalize().await?;
 
-    info!("{:?}", res);
+    log::info!("{:?}", res);
 
     Ok(())
 }

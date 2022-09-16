@@ -38,7 +38,7 @@ pub fn test_on_runtimes(
         #[test]
         fn #async_std_test()-> Result<()> {
             LOGGER_SETUP.call_once(|| {
-                env_logger::init();
+                log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
             });
             async_std::task::block_on(async {
                 let config = tiberius::Config::from_ado_string(&#conn_str_ident)?;
@@ -54,7 +54,7 @@ pub fn test_on_runtimes(
         #[test]
         fn #tokio_test()-> Result<()> {
             LOGGER_SETUP.call_once(|| {
-                env_logger::init();
+                log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
             });
             use tokio_util::compat::TokioAsyncWriteCompatExt;
 

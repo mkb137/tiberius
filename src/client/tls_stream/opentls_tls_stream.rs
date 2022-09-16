@@ -6,7 +6,7 @@ use futures::{AsyncRead, AsyncWrite};
 pub(crate) use opentls::async_io::{TlsConnector, TlsStream};
 use opentls::Certificate;
 use std::fs;
-use tracing::{event, Level};
+
 
 pub(crate) async fn create_tls_stream<S: AsyncRead + AsyncWrite + Unpin + Send>(
     config: &Config,
@@ -42,8 +42,7 @@ pub(crate) async fn create_tls_stream<S: AsyncRead + AsyncWrite + Unpin + Send>(
             }
         }
         TrustConfig::TrustAll => {
-            event!(
-                Level::WARN,
+            log::warn!(
                 "Trusting the server certificate without validation."
             );
 

@@ -7,7 +7,7 @@ use futures::TryFutureExt;
 use futures_lite::FutureExt;
 use std::io;
 use std::time::Duration;
-use tracing::Level;
+
 
 #[async_trait]
 impl SqlBrowser for TcpStream {
@@ -29,8 +29,7 @@ impl SqlBrowser for TcpStream {
                     "[::]:0".parse().unwrap()
                 };
 
-                tracing::event!(
-                    Level::TRACE,
+                tracing::log::trace!(
                     "Connecting to instance `{}` using SQL Browser in port `{}`",
                     instance_name,
                     builder.get_port()
@@ -64,7 +63,7 @@ impl SqlBrowser for TcpStream {
                     }).await?;
 
                 let port = super::get_port_from_sql_browser_reply(buf, len, instance_name)?;
-                tracing::event!(Level::TRACE, "Found port `{}` from SQL Browser", port);
+                log::trace!("Found port `{}` from SQL Browser", port);
                 addr.set_port(port);
             };
 

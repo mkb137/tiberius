@@ -2,7 +2,7 @@ use super::{Packet, PacketCodec, PacketHeader, HEADER_BYTES};
 use crate::Error;
 use asynchronous_codec::Decoder;
 use bytes::{Buf, BytesMut};
-use tracing::{event, Level};
+
 
 pub trait Decode<B: Buf> {
     fn decode(src: &mut B) -> crate::Result<Self>
@@ -28,8 +28,7 @@ impl Decoder for PacketCodec {
             return Ok(None);
         }
 
-        event!(
-            Level::TRACE,
+        log::trace!(
             "Reading a {:?} ({} bytes)",
             header.r#type(),
             length,

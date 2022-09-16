@@ -24,7 +24,7 @@ use tokio_rustls::{
     TlsConnector,
 };
 use tokio_util::compat::{Compat, FuturesAsyncReadCompatExt, TokioAsyncReadCompatExt};
-use tracing::{event, Level};
+
 
 impl From<tokio_rustls::webpki::Error> for Error {
     fn from(e: tokio_rustls::webpki::Error) -> Self {
@@ -116,8 +116,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> TlsStream<S> {
                 }
             }
             TrustConfig::TrustAll => {
-                event!(
-                    Level::WARN,
+                log::warn!(
                     "Trusting the server certificate without validation."
                 );
                 let mut config = builder.with_native_roots().with_no_client_auth();
@@ -195,14 +194,13 @@ impl ConfigBuilderExt for ConfigBuilder<ClientConfig, WantsVerifier> {
             match roots.add(&cert) {
                 Ok(_) => valid_count += 1,
                 Err(err) => {
-                    tracing::event!(Level::TRACE, "invalid cert der {:?}", cert.0);
-                    tracing::event!(Level::DEBUG, "certificate parsing failed: {:?}", err);
+                    log::trace!("invalid cert der {:?}", cert.0);
+                    tracing::log::debug!!( "certificate parsing failed: {:?}", err);
                     invalid_count += 1
                 }
             }
         }
-        tracing::event!(
-            Level::TRACE,
+        tracing::log::trace!(
             "with_native_roots processed {} valid and {} invalid certs",
             valid_count,
             invalid_count
