@@ -252,6 +252,7 @@
 
 #[cfg(feature = "bigdecimal")]
 pub(crate) extern crate bigdecimal_ as bigdecimal;
+extern crate core;
 
 #[macro_use]
 mod macros;

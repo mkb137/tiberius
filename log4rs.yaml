@@ -3,13 +3,13 @@ appenders:
   stdout:
     kind: console
     encoder:
-      pattern: "{M} {d(%Y-%m-%d %H:%M:%S%.3f)} - {m}{n}"
+      pattern: "{d(%H:%M:%S%.3f)} {I} {l} {M} - {m}{n}"
   file:
     kind: file
     path: "../log/app.log"
     append: false
     encoder:
-      pattern: "{T} {M} {d(%Y-%m-%d %H:%M:%S)} - {m}{n}"
+      pattern: "{d(%Y-%m-%d %H:%M:%S)} {T} {M} - {m}{n}"
 root:
   level: warn
   appenders:
@@ -17,4 +17,6 @@ root:
     - file
 loggers:
   tiberius:
-    level: trace
+    level: warn
+  tiberius::tds::codec::login:
+    level: debug
