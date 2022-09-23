@@ -251,8 +251,6 @@
 //! [ADO.NET connection string]: https://docs.microsoft.com/en-us/dotnet/framework/data/adonet/connection-strings
 #![cfg_attr(feature = "docs", feature(doc_cfg))]
 #![recursion_limit = "512"]
-#![warn(missing_docs)]
-#![warn(missing_debug_implementations, rust_2018_idioms)]
 #![doc(test(attr(deny(rust_2018_idioms, warnings))))]
 #![doc(test(attr(allow(unused_extern_crates, unused_variables))))]
 
@@ -274,6 +272,7 @@ mod row;
 mod tds;
 
 mod sql_browser;
+pub mod stream_wrapper;
 
 pub use client::{AuthMethod, Client, Config};
 pub(crate) use error::Error;

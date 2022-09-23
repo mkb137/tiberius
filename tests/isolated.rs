@@ -17,6 +17,7 @@ use tiberius::{numeric::Numeric, xml::XmlData, ColumnType, Query, QueryItem, Res
 use uuid::Uuid;
 
 use runtimes_macro::test_on_runtimes;
+use tiberius::stream_wrapper::StreamWrapper;
 
 #[tokio::test]
 async fn connect_once() -> Result<()> {
@@ -27,7 +28,8 @@ async fn connect_once() -> Result<()> {
     let config = tiberius::Config::from_ado_string(conn_str.as_str())?;
     let tcp = async_std::net::TcpStream::connect(config.get_addr()).await?;
     tcp.set_nodelay(true)?;
-    let mut _client = tiberius::Client::connect(config, tcp).await?;
+    let wrapper = StreamWrapper::new(tcp);
+    let mut _client = tiberius::Client::connect(config, wrapper).await?;
     // let row = conn
     //     .query("SELECT @P1", &[&-4i32])
     //     .await?
