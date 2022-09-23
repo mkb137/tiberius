@@ -1,3 +1,9 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_extern_crates)]
+
 //! An asynchronous, runtime-independent, pure-rust Tabular Data Stream (TDS)
 //! implementation for Microsoft SQL Server.
 //!
@@ -252,7 +258,6 @@
 
 #[cfg(feature = "bigdecimal")]
 pub(crate) extern crate bigdecimal_ as bigdecimal;
-extern crate core;
 
 #[macro_use]
 mod macros;

@@ -25,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
     client
         .execute("DROP TABLE IF EXISTS bulk_test1", &[])
         .await?;
-    log::info!("drop table");
+    log::trace!("drop table");
     client
         .execute(
             r#"CREATE TABLE bulk_test1 (
@@ -36,7 +36,7 @@ async fn main() -> anyhow::Result<()> {
             &[],
         )
         .await?;
-    log::info!("create table done");
+    log::trace!("create table done");
 
     let mut req = client.bulk_insert("bulk_test1").await?;
 
@@ -44,7 +44,7 @@ async fn main() -> anyhow::Result<()> {
 
     let pb = ProgressBar::new(count as u64);
 
-    log::info!("start loading data");
+    log::trace!("start loading data");
     for i in 0..1000 {
         let int_column = [Some(32), None][i % 2];
         let float_column = [Some(34f32), None][i % 2];
@@ -60,7 +60,7 @@ async fn main() -> anyhow::Result<()> {
 
     let res = req.finalize().await?;
 
-    log::info!("{:?}", res);
+    log::trace!("{:?}", res);
 
     Ok(())
 }

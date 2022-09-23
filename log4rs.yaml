@@ -17,6 +17,12 @@ root:
     - file
 loggers:
   tiberius:
-    level: warn
+    level: debug
   tiberius::tds::codec::login:
+    level: debug
+  tiberius::tds::stream::token:
+    level: debug
+  tiberius::client::connection:
+    level: debug
+  tiberius::tests:
     level: debug

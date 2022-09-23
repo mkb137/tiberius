@@ -129,12 +129,11 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
     ))]
     fn post_login_encryption(mut self, encryption: EncryptionLevel) -> Self {
         if let EncryptionLevel::Off = encryption {
-            log::warn!(
-                "Turning TLS off after a login. All traffic from here on is not encrypted.",
-            );
+            log::warn!("Turning TLS off after a login. All traffic from here on is not encrypted.",);
 
             let Self { transport, .. } = self;
-            let tcp = transport.into_inner().into_inner();
+            let maybe_stream = transport.into_inner();
+            let tcp = maybe_stream.into_inner();
             self.transport = Framed::new(MaybeTlsStream::Raw(tcp), PacketCodec);
         }
 
@@ -161,6 +160,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
     where
         E: Sized + Encode<BytesMut>,
     {
+        log::trace!("send - header = {:?}", header);
         self.flushed = false;
         let packet_size = (self.context.packet_size() as usize) - HEADER_BYTES;
 
@@ -186,7 +186,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
         }
 
         self.flush_sink().await?;
-
+        log::trace!(" - done send");
         Ok(())
     }
 
@@ -229,9 +229,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
         }
 
         while let Some(packet) = self.try_next().await? {
-            log::warn!(
-                "Flushing unhandled packet from the wire. Please consume your streams!",
-            );
+            log::warn!("Flushing unhandled packet from the wire. Please consume your streams!",);
 
             let is_last = packet.is_last();
 
@@ -286,8 +284,11 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
         application_name: Option<String>,
         prelogin: PreloginMessage,
     ) -> crate::Result<Self> {
+        log::trace!("login");
+        log::trace!(" - creating message");
         let mut login_message = LoginMessage::new();
 
+        log::trace!(" - updating properties");
         if let Some(db) = db {
             login_message.db_name(db);
         }
@@ -303,6 +304,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
         match auth {
             #[cfg(all(windows, feature = "winauth"))]
             AuthMethod::Integrated => {
+                log::trace!(" - login method is Integrated");
                 let mut client = NtlmSspiBuilder::new()
                     .target_spn(self.context.spn())
                     .build()?;
@@ -372,6 +374,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
             }
             #[cfg(all(windows, feature = "winauth"))]
             AuthMethod::Windows(auth) => {
+                log::trace!(" - login method is Windows");
                 let spn = self.context.spn().to_string();
                 let builder = winauth::NtlmV2ClientBuilder::new().target_spn(spn);
                 let mut client = builder.build(auth.domain, auth.user, auth.password);
@@ -399,19 +402,24 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
                 }
             }
             AuthMethod::None => {
+                log::trace!(" - login method is None");
                 let id = self.context.next_packet_id();
                 self.send(PacketHeader::login(id), login_message).await?;
                 self = self.post_login_encryption(encryption);
             }
             AuthMethod::SqlServer(auth) => {
+                log::trace!(" - login method is SQL Server");
                 login_message.user_name(auth.user());
                 login_message.password(auth.password());
 
                 let id = self.context.next_packet_id();
+                log::trace!(" - sending message");
                 self.send(PacketHeader::login(id), login_message).await?;
+                log::trace!(" - performing post-login encryption");
                 self = self.post_login_encryption(encryption);
             }
             AuthMethod::AADToken(token) => {
+                log::trace!(" - login method is AAD Token");
                 login_message.aad_token(token, prelogin.fed_auth_required, prelogin.nonce);
                 let id = self.context.next_packet_id();
                 self.send(PacketHeader::login(id), login_message).await?;
@@ -434,7 +442,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
         encryption: EncryptionLevel,
     ) -> crate::Result<Self> {
         if encryption != EncryptionLevel::NotSupported {
-            log::info!("Performing a TLS handshake");
+            log::trace!("Performing a TLS handshake");
 
             let Self {
                 transport, context, ..
@@ -447,7 +455,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
             };
 
             stream.get_mut().handshake_complete();
-            log::info!("TLS handshake successful");
+            log::trace!("TLS handshake successful");
 
             let transport = Framed::new(MaybeTlsStream::Tls(stream), PacketCodec);
 

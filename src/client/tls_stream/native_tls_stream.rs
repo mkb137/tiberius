@@ -7,7 +7,6 @@ use async_native_tls::{Certificate, TlsConnector};
 use futures::{AsyncRead, AsyncWrite};
 use std::fs;
 
-
 pub(crate) async fn create_tls_stream<S: AsyncRead + AsyncWrite + Unpin + Send>(
     config: &Config,
     stream: S,
@@ -42,16 +41,14 @@ pub(crate) async fn create_tls_stream<S: AsyncRead + AsyncWrite + Unpin + Send>(
             }
         }
         TrustConfig::TrustAll => {
-            log::warn!(
-                "Trusting the server certificate without validation."
-            );
+            log::warn!("Trusting the server certificate without validation.");
 
             builder = builder.danger_accept_invalid_certs(true);
             builder = builder.danger_accept_invalid_hostnames(true);
             builder = builder.use_sni(false);
         }
         TrustConfig::Default => {
-            log::info!("Using default trust configuration.");
+            log::trace!("Using default trust configuration.");
         }
     }
 

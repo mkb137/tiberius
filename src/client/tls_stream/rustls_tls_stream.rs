@@ -195,7 +195,7 @@ impl ConfigBuilderExt for ConfigBuilder<ClientConfig, WantsVerifier> {
                 Ok(_) => valid_count += 1,
                 Err(err) => {
                     log::trace!("invalid cert der {:?}", cert.0);
-                    tracing::log::debug!!( "certificate parsing failed: {:?}", err);
+                    tracing::log::trace!!( "certificate parsing failed: {:?}", err);
                     invalid_count += 1
                 }
             }

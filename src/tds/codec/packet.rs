@@ -37,6 +37,7 @@ impl Encode<BytesMut> for Packet {
 
 impl Decode<BytesMut> for Packet {
     fn decode(src: &mut BytesMut) -> crate::Result<Self> {
+        log::trace!("decode");
         Ok(Self {
             header: PacketHeader::decode(src)?,
             payload: src.split(),

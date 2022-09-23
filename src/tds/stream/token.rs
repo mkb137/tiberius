@@ -10,7 +10,6 @@ use crate::{
 use futures::{stream::BoxStream, AsyncRead, AsyncWrite, TryStreamExt};
 use std::{convert::TryFrom, sync::Arc};
 
-
 #[derive(Debug)]
 pub enum ReceivedToken {
     NewResultset(Arc<TokenColMetaData<'static>>),
@@ -41,6 +40,7 @@ where
     }
 
     pub(crate) async fn flush_done(self) -> crate::Result<TokenDone> {
+        log::trace!("flush_done");
         let mut stream = self.try_unfold();
 
         let mut routing = None;
@@ -62,6 +62,7 @@ where
 
     #[cfg(any(windows, feature = "integrated-auth-gssapi"))]
     pub(crate) async fn flush_sspi(self) -> crate::Result<TokenSspi> {
+        log::trace!("flush_sspi");
         let mut stream = self.try_unfold();
 
         loop {
@@ -156,29 +157,26 @@ where
             _ => (),
         }
 
-       log::info!("change = {:?}", change);
+        log::trace!("change = {:?}", change);
 
         Ok(ReceivedToken::EnvChange(change))
     }
 
     async fn get_info(&mut self) -> crate::Result<ReceivedToken> {
         let info = TokenInfo::decode(self.conn).await?;
-       log::info!("info.messag = {:?}", info.message);
+        log::trace!("info.messag = {:?}", info.message);
         Ok(ReceivedToken::Info(info))
     }
 
     async fn get_login_ack(&mut self) -> crate::Result<ReceivedToken> {
         let ack = TokenLoginAck::decode(self.conn).await?;
-       log::info!("{} version {:?}", ack.prog_name, ack.version);
+        log::trace!("{} version {:?}", ack.prog_name, ack.version);
         Ok(ReceivedToken::LoginAck(ack))
     }
 
     async fn get_feature_ext_ack(&mut self) -> crate::Result<ReceivedToken> {
         let ack = TokenFeatureExtAck::decode(self.conn).await?;
-        log::info!(
-            "FeatureExtAck with {} features",
-            ack.features.len()
-        );
+        log::trace!("FeatureExtAck with {} features", ack.features.len());
         Ok(ReceivedToken::FeatureExtAck(ack))
     }
 

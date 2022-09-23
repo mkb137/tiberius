@@ -150,11 +150,13 @@ impl Decode<BytesMut> for PacketHeader {
     where
         Self: Sized,
     {
+        log::trace!("decode");
         let raw_ty = src.get_u8();
 
         let ty = PacketType::try_from(raw_ty).map_err(|_| {
             Error::Protocol(format!("header: invalid packet type: {}", raw_ty).into())
         })?;
+        log::trace!(" - packet type = {:?}", ty);
 
         let status = PacketStatus::try_from(src.get_u8())
             .map_err(|_| Error::Protocol("header: invalid packet status".into()))?;
