@@ -17,7 +17,6 @@ use std::{
     task::{self, Poll},
 };
 
-
 /// A wrapper to handle either TLS or bare connections.
 pub(crate) enum MaybeTlsStream<S: AsyncRead + AsyncWrite + Unpin + Send> {
     Raw(S),
@@ -72,14 +71,21 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> AsyncWrite for MaybeTlsStream<S> 
         cx: &mut task::Context<'_>,
         buf: &[u8],
     ) -> Poll<io::Result<usize>> {
+        log::debug!("poll_write (MaybeTlsStream) - {:?} bytes", buf.len());
         match self.get_mut() {
-            MaybeTlsStream::Raw(s) => Pin::new(s).poll_write(cx, buf),
+            MaybeTlsStream::Raw(s) => {
+                log::debug!(" - write RAW");
+                Pin::new(s).poll_write(cx, buf)
+            }
             #[cfg(any(
                 feature = "rustls",
                 feature = "native-tls",
                 feature = "vendored-openssl"
             ))]
-            MaybeTlsStream::Tls(s) => Pin::new(s).poll_write(cx, buf),
+            MaybeTlsStream::Tls(s) => {
+                log::debug!(" - write TLS");
+                Pin::new(s).poll_write(cx, buf)
+            }
         }
     }
 
@@ -187,10 +193,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> AsyncRead for TlsPreloginWrapper<
             // And we know from this point on how much data we should expect
             inner.read_remaining = header.length() as usize - HEADER_BYTES;
 
-            log::trace!(
-                "Reading packet of {} bytes",
-                inner.read_remaining,
-            );
+            log::trace!("Reading packet of {} bytes", inner.read_remaining,);
         }
 
         let max_read = cmp::min(inner.read_remaining, buf.len());
@@ -217,6 +220,11 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> AsyncWrite for TlsPreloginWrapper
         cx: &mut task::Context<'_>,
         buf: &[u8],
     ) -> Poll<io::Result<usize>> {
+        log::debug!(
+            "poll_write (TlsPreloginWrapper) - {:?} bytes, pending_handshake = {:?}",
+            buf.len(),
+            self.pending_handshake
+        );
         // Normal operation does not need any extra treatment, we handle
         // packets in the codec.
         if !self.pending_handshake {
@@ -250,10 +258,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> AsyncWrite for TlsPreloginWrapper
             }
 
             while !inner.wr_buf.is_empty() {
-                log::trace!(
-                    "Writing a packet of {} bytes",
-                    inner.wr_buf.len(),
-                );
+                log::trace!("Writing a packet of {} bytes", inner.wr_buf.len(),);
 
                 let written = ready!(
                     Pin::new(&mut inner.stream.as_mut().unwrap()).poll_write(cx, &inner.wr_buf)
