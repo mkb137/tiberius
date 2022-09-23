@@ -26,9 +26,9 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> AsyncWrite for StreamWrapper<S> {
         cx: &mut Context<'_>,
         buf: &[u8],
     ) -> Poll<std::io::Result<usize>> {
-        log::debug!("poll_write - {:?} bytes", buf.len());
+        log::trace!("poll_write - {:?} bytes", buf.len());
         for chunk in buf.chunks(16) {
-            log::debug!("{}", hex::encode(chunk));
+            log::trace!("{}", hex::encode(chunk));
         }
         Pin::new(&mut self.stream).poll_write(cx, buf)
     }

@@ -163,7 +163,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> AsyncWrite for TlsStream<S> {
         cx: &mut Context<'_>,
         buf: &[u8],
     ) -> Poll<io::Result<usize>> {
-        log::debug!("poll_write (TlsStream) - {:?} bytes", buf.len());
+        log::trace!("poll_write (TlsStream) - {:?} bytes", buf.len());
         let inner = Pin::get_mut(self);
         Pin::new(&mut inner.0).poll_write(cx, buf)
     }
