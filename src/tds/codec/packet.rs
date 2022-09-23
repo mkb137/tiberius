@@ -30,7 +30,10 @@ impl Encode<BytesMut> for Packet {
 
         dst[2] = size[0];
         dst[3] = size[1];
-
+        log::debug!("encode - {:?} bytes", dst.len());
+        for chunk in dst.chunks(16) {
+            log::debug!("{}", hex::encode(chunk));
+        }
         Ok(())
     }
 }

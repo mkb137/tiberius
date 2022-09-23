@@ -203,7 +203,6 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
     ) -> crate::Result<()> {
         log::debug!("write_to_wire");
         self.flushed = false;
-
         let packet = Packet::new(header, data);
         self.transport.send(packet).await?;
 
