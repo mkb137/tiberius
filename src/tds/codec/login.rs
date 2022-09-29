@@ -240,92 +240,92 @@ impl<'a> Encode<BytesMut> for LoginMessage<'a> {
         let mut cursor = Cursor::new(Vec::with_capacity(512));
 
         // Space for the length
-        log::debug!(
+        log::trace!(
             " - at offset {:?}, writing length = {:?}",
             cursor.position(),
             0
         );
         cursor.write_u32::<LittleEndian>(0)?;
-        log::debug!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
-        log::debug!(
+        log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
+        log::trace!(
             " - at offset {:?}, writing tds_version = {:?}",
             cursor.position(),
             self.tds_version as u32
         );
         cursor.write_u32::<LittleEndian>(self.tds_version as u32)?;
-        log::debug!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
-        log::debug!(
+        log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
+        log::trace!(
             " - at offset {:?}, writing packet_size = {:?} ",
             cursor.position(),
             self.packet_size
         );
         cursor.write_u32::<LittleEndian>(self.packet_size)?;
-        log::debug!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
-        log::debug!(
+        log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
+        log::trace!(
             " - at offset {:?}, writing client_prog_ver = {:?} ",
             cursor.position(),
             self.client_prog_ver
         );
         cursor.write_u32::<LittleEndian>(self.client_prog_ver)?;
-        log::debug!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
-        log::debug!(
+        log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
+        log::trace!(
             " - at offset {:?}, writing client_pid = {:?} ",
             cursor.position(),
             self.client_pid
         );
         cursor.write_u32::<LittleEndian>(self.client_pid)?;
-        log::debug!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
-        log::debug!(
+        log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
+        log::trace!(
             " - at offset {:?}, writing connection_id = {:?} ",
             cursor.position(),
             self.connection_id
         );
         cursor.write_u32::<LittleEndian>(self.connection_id)?;
-        log::debug!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
+        log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
 
-        log::debug!(
+        log::trace!(
             " - at offset {:?}, writing option_flags_1 = {:?} ",
             cursor.position(),
             self.option_flags_1.bits()
         );
         cursor.write_u8(self.option_flags_1.bits())?;
-        log::debug!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
-        log::debug!(
+        log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
+        log::trace!(
             " - at offset {:?}, writing option_flags_2 = {:?} ",
             cursor.position(),
             self.option_flags_2.bits()
         );
         cursor.write_u8(self.option_flags_2.bits())?;
-        log::debug!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
-        log::debug!(
+        log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
+        log::trace!(
             " - at offset {:?}, writing type_flags = {:?} ",
             cursor.position(),
             self.type_flags.bits()
         );
         cursor.write_u8(self.type_flags.bits())?;
-        log::debug!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
-        log::debug!(
+        log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
+        log::trace!(
             " - at offset {:?}, writing option_flags_3 = {:?} ",
             cursor.position(),
             self.option_flags_3.bits()
         );
         cursor.write_u8(self.option_flags_3.bits())?;
-        log::debug!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
+        log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
 
-        log::debug!(
+        log::trace!(
             " - at offset {:?}, writing client_timezone = {:?} ",
             cursor.position(),
             self.client_timezone
         );
         cursor.write_u32::<LittleEndian>(self.client_timezone as u32)?;
-        log::debug!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
-        log::debug!(
+        log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
+        log::trace!(
             " - at offset {:?}, writing client_lcid = {:?} ",
             cursor.position(),
             self.client_lcid
         );
         cursor.write_u32::<LittleEndian>(self.client_lcid)?;
-        log::debug!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
+        log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
 
         // variable length data (OffsetLength)
         let var_data = [
@@ -343,12 +343,12 @@ impl<'a> Encode<BytesMut> for LoginMessage<'a> {
             &"".into(), // ibAtchDBFile
             &"".into(), // ibChangePassword
         ];
-        log::debug!(" - var_data = {:?}", var_data);
+        log::trace!(" - var_data = {:?}", var_data);
         let mut data_offset = cursor.position() as usize + var_data.len() * 2 * 2 + 6;
         let mut fea_ext_offset = 0;
 
         for (i, value) in var_data.iter().enumerate() {
-            log::debug!(" - writing value {:?} = {:?}", i, value);
+            log::trace!(" - writing value {:?} = {:?}", i, value);
             if i == 5 {
                 // we might need to update the feature ext potion later
                 fea_ext_offset = cursor.position();
@@ -356,29 +356,29 @@ impl<'a> Encode<BytesMut> for LoginMessage<'a> {
 
             // write the client ID (created from the MAC address)
             if i == 9 {
-                log::debug!(
+                log::trace!(
                     " - at offset {:?}, writing fake client id = {:?} ",
                     cursor.position(),
                     42
                 );
                 cursor.write_u32::<LittleEndian>(0)?; //TODO:
                 cursor.write_u16::<LittleEndian>(42)?; //TODO: generate real client id
-                                                       // log::debug!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
+                                                       // log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
                 for chunk in cursor.get_ref().chunks(16) {
-                    log::debug!("{}", hex::encode(chunk));
+                    log::trace!("{}", hex::encode(chunk));
                 }
                 continue;
             }
 
-            log::debug!(
+            log::trace!(
                 " - at offset {:?}, writing data_offset = {:?} ",
                 cursor.position(),
                 data_offset
             );
             cursor.write_u16::<LittleEndian>(data_offset as u16)?;
-            // log::debug!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
+            // log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
             for chunk in cursor.get_ref().chunks(16) {
-                log::debug!("{}", hex::encode(chunk));
+                log::trace!("{}", hex::encode(chunk));
             }
 
             // ibSSPI
@@ -406,9 +406,9 @@ impl<'a> Encode<BytesMut> for LoginMessage<'a> {
             let bak = cursor.position();
             cursor.set_position(data_offset as u64);
 
-            log::debug!(" - at offset {:?}, writing utf16 data", cursor.position());
+            log::trace!(" - at offset {:?}, writing utf16 data", cursor.position());
             for codepoint in value.encode_utf16() {
-                log::debug!(
+                log::trace!(
                     " - at offset {:?}, writing codepoint = {:?}",
                     cursor.position(),
                     codepoint
@@ -417,7 +417,7 @@ impl<'a> Encode<BytesMut> for LoginMessage<'a> {
             }
             // // log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
             // for chunk in cursor.get_ref().chunks(16) {
-            //     log::debug!("{}", hex::encode(chunk));
+            //     log::trace!("{}", hex::encode(chunk));
             // }
 
             let new_position = cursor.position() as usize;
@@ -427,7 +427,7 @@ impl<'a> Encode<BytesMut> for LoginMessage<'a> {
                 let buffer = cursor.get_mut();
                 for byte in buffer.iter_mut().take(new_position).skip(data_offset) {
                     *byte = ((*byte << 4) & 0xf0 | (*byte >> 4) & 0x0f) ^ 0xA5;
-                    log::debug!(" - writing password byte = {:?}", *byte);
+                    log::trace!(" - writing password byte = {:?}", *byte);
                 }
             }
 
@@ -437,7 +437,7 @@ impl<'a> Encode<BytesMut> for LoginMessage<'a> {
 
             // microsoft being really consistent here... using byte offsets with utf16-length's
             // sounds like premature optimization
-            log::debug!(
+            log::trace!(
                 " - (end loop) at offset {:?}, writing length = {:?}, len = {:?}",
                 cursor.position(),
                 length,
@@ -446,7 +446,7 @@ impl<'a> Encode<BytesMut> for LoginMessage<'a> {
             cursor.write_u16::<LittleEndian>(length as u16 / 2)?;
             // log::trace!(" - hex = {:?}", hex::encode(&cursor.get_ref()));
             for chunk in cursor.get_ref().chunks(16) {
-                log::debug!("{}", hex::encode(chunk));
+                log::trace!("{}", hex::encode(chunk));
             }
         }
 
@@ -505,7 +505,7 @@ impl<'a> Encode<BytesMut> for LoginMessage<'a> {
         log::trace!(" - length = {:?}", length);
         log::trace!(" - dst = {:?} bytes", dst.len());
         for chunk in dst.chunks(16) {
-            log::debug!("{}", hex::encode(chunk));
+            log::trace!("{}", hex::encode(chunk));
         }
 
         Ok(())

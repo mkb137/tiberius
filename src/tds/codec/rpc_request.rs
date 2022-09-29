@@ -92,6 +92,8 @@ impl<'a> From<RpcProcId> for RpcProcIdValue<'a> {
 
 impl<'a> Encode<BytesMut> for TokenRpcRequest<'a> {
     fn encode(self, dst: &mut BytesMut) -> Result<()> {
+        log::debug!("encode(RpcRequest) - {:?} bytes in dst", dst.len());
+        log::debug!(" - encoding header");
         dst.put_u32_le(ALL_HEADERS_LEN_TX as u32);
         dst.put_u32_le(ALL_HEADERS_LEN_TX as u32 - 4);
         dst.put_u16_le(AllHeaderTy::TransactionDescriptor as u16);
@@ -111,10 +113,11 @@ impl<'a> Encode<BytesMut> for TokenRpcRequest<'a> {
         }
 
         dst.put_u16_le(self.flags.bits() as u16);
-
+        log::debug!(" - encoding params");
         for param in self.params.into_iter() {
             param.encode(dst)?;
         }
+        log::debug!(" - done encode");
 
         Ok(())
     }
@@ -122,24 +125,29 @@ impl<'a> Encode<BytesMut> for TokenRpcRequest<'a> {
 
 impl<'a> Encode<BytesMut> for RpcParam<'a> {
     fn encode(self, dst: &mut BytesMut) -> Result<()> {
+        log::debug!("encode (RpcParam) - {:?} bytes in dst", dst.len());
         let len_pos = dst.len();
+        log::debug!(" - saving length position as {:?}", len_pos);
         let mut length = 0u8;
 
         dst.put_u8(length);
-
+        log::debug!(" - writing name - {:?} bytes in dst", dst.len());
         for codepoint in self.name.encode_utf16() {
             length += 1;
             dst.put_u16_le(codepoint);
         }
+        log::debug!(" - wrote name - {:?} bytes in dst", dst.len());
 
         dst.put_u8(self.flags.bits());
+        log::debug!(" - wrote flags - {:?} bytes in dst", dst.len());
 
         let mut dst_fi = BytesMutWithTypeInfo::new(dst);
         self.value.encode(&mut dst_fi)?;
+        log::debug!(" - wrote value - {:?} bytes in dst", dst.len());
 
         let dst: &mut [u8] = dst.borrow_mut();
         dst[len_pos] = length;
-
+        log::debug!(" - updated length at {:?} to {:?}", len_pos, length);
         Ok(())
     }
 }

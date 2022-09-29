@@ -160,7 +160,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
     where
         E: Sized + Encode<BytesMut>,
     {
-        log::debug!("send - header = {:?}", header);
+        log::trace!("send - header = {:?}", header);
         self.flushed = false;
         let packet_size = (self.context.packet_size() as usize) - HEADER_BYTES;
 
@@ -201,7 +201,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
         header: PacketHeader,
         data: BytesMut,
     ) -> crate::Result<()> {
-        log::debug!("write_to_wire");
+        log::trace!("write_to_wire");
         self.flushed = false;
         let packet = Packet::new(header, data);
         self.transport.send(packet).await?;
@@ -441,9 +441,9 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
         config: &Config,
         encryption: EncryptionLevel,
     ) -> crate::Result<Self> {
-        log::debug!("tls_handshake");
+        log::trace!("tls_handshake");
         if encryption != EncryptionLevel::NotSupported {
-            log::debug!("Performing a TLS handshake");
+            log::trace!("Performing a TLS handshake");
 
             let Self {
                 transport, context, ..
@@ -456,7 +456,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
             };
 
             stream.get_mut().handshake_complete();
-            log::debug!("TLS handshake successful");
+            log::trace!("TLS handshake successful");
 
             let transport = Framed::new(MaybeTlsStream::Tls(stream), PacketCodec);
 

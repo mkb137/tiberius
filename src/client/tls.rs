@@ -71,10 +71,10 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> AsyncWrite for MaybeTlsStream<S> 
         cx: &mut task::Context<'_>,
         buf: &[u8],
     ) -> Poll<io::Result<usize>> {
-        log::debug!("poll_write (MaybeTlsStream) - {:?} bytes", buf.len());
+        log::trace!("poll_write (MaybeTlsStream) - {:?} bytes", buf.len());
         match self.get_mut() {
             MaybeTlsStream::Raw(s) => {
-                log::debug!(" - write RAW");
+                log::trace!(" - write RAW");
                 Pin::new(s).poll_write(cx, buf)
             }
             #[cfg(any(
@@ -83,7 +83,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> AsyncWrite for MaybeTlsStream<S> 
                 feature = "vendored-openssl"
             ))]
             MaybeTlsStream::Tls(s) => {
-                log::debug!(" - write TLS");
+                log::trace!(" - write TLS");
                 Pin::new(s).poll_write(cx, buf)
             }
         }
@@ -220,7 +220,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> AsyncWrite for TlsPreloginWrapper
         cx: &mut task::Context<'_>,
         buf: &[u8],
     ) -> Poll<io::Result<usize>> {
-        log::debug!(
+        log::trace!(
             "poll_write (TlsPreloginWrapper) - {:?} bytes, pending_handshake = {:?}",
             buf.len(),
             self.pending_handshake
