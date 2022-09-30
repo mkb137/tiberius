@@ -160,7 +160,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
     where
         E: Sized + Encode<BytesMut>,
     {
-        log::trace!("send - header = {:?}", header);
+        log::debug!("send - packet type = {:?}", header.r#type());
         self.flushed = false;
         let packet_size = (self.context.packet_size() as usize) - HEADER_BYTES;
 
@@ -201,7 +201,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Connection<S> {
         header: PacketHeader,
         data: BytesMut,
     ) -> crate::Result<()> {
-        log::trace!("write_to_wire");
+        log::debug!("write_to_wire - packet type {:?}", header.r#type());
         self.flushed = false;
         let packet = Packet::new(header, data);
         self.transport.send(packet).await?;

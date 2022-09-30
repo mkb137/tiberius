@@ -21,7 +21,7 @@ loggers:
   tiberius::tds::codec::login:
     level: debug
   tiberius::tds::stream::token:
-    level: debug
+    level: trace
   tiberius::client::connection:
     level: debug
   tiberius::tests:

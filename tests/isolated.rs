@@ -29,15 +29,15 @@ async fn connect_once() -> Result<()> {
     let tcp = async_std::net::TcpStream::connect(config.get_addr()).await?;
     tcp.set_nodelay(true)?;
     let wrapper = StreamWrapper::new(tcp);
-    let mut _client = tiberius::Client::connect(config, wrapper).await?;
-    // let row = conn
-    //     .query("SELECT @P1", &[&-4i32])
-    //     .await?
-    //     .into_row()
-    //     .await?
-    //     .unwrap();
-    //
-    // assert_eq!(Some(-4i32), row.get(0));
+    let mut client = tiberius::Client::connect(config, wrapper).await?;
+    let row = client
+        .query("SELECT @P1, @P2", &[&-4i32, &1u8])
+        .await?
+        .into_row()
+        .await?
+        .unwrap();
+
+    assert_eq!(Some(-4i32), row.get(0));
 
     Ok(())
 }

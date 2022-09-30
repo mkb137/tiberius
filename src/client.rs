@@ -185,16 +185,20 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Client<S> {
     where
         'a: 'b,
     {
+        log::debug!("query");
         self.connection.flush_stream().await?;
         let rpc_params = Self::rpc_params(query);
-
+        log::debug!(" - rpc_params = {:?}", rpc_params);
         let params = params.iter().map(|p| p.to_sql());
         self.rpc_perform_query(RpcProcId::ExecuteSQL, rpc_params, params)
             .await?;
-
+        log::debug!(" - creating token stream");
         let ts = TokenStream::new(&mut self.connection);
+        log::debug!(" - creating query stream");
         let mut result = QueryStream::new(ts.try_unfold());
+        log::debug!(" - forwarding to metadata");
         result.forward_to_metadata().await?;
+        log::debug!(" - returning query stream");
 
         Ok(result)
     }
@@ -348,6 +352,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Client<S> {
     }
 
     pub(crate) fn rpc_params<'a>(query: impl Into<Cow<'a, str>>) -> Vec<RpcParam<'a>> {
+        log::debug!("rpc_params");
         vec![
             RpcParam {
                 name: Cow::Borrowed("stmt"),
@@ -371,9 +376,11 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Client<S> {
     where
         'a: 'b,
     {
+        log::debug!("rpc_perform_query");
         let mut param_str = String::new();
 
         for (i, param) in params.enumerate() {
+            log::debug!(" - adding param {:?}, type = {:?}", i, &param.type_name());
             if i > 0 {
                 param_str.push(',')
             }
@@ -386,20 +393,23 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Client<S> {
                 value: param,
             });
         }
-
+        log::debug!(" - finding 'params' param");
         if let Some(params) = rpc_params.iter_mut().find(|x| x.name == "params") {
+            log::debug!(" - updating 'params' param value to {:?}", param_str);
             params.value = ColumnData::String(Some(param_str.into()));
         }
-
+        log::debug!(" - creating RPC request");
         let req = TokenRpcRequest::new(
             proc_id,
             rpc_params,
             self.connection.context().transaction_descriptor(),
         );
-
+        log::debug!(" - getting next packet ID");
         let id = self.connection.context_mut().next_packet_id();
+        log::debug!(" - got next packet ID = {:?}", id);
+        log::debug!(" - sending RPC packet(s)");
         self.connection.send(PacketHeader::rpc(id), req).await?;
-
+        log::debug!(" - done rpc_perform_query");
         Ok(())
     }
 }

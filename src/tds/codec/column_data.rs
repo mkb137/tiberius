@@ -145,6 +145,7 @@ impl<'a> ColumnData<'a> {
 
 impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
     fn encode(self, dst: &mut BytesMutWithTypeInfo<'a>) -> crate::Result<()> {
+        log::debug!("encode");
         match (self, dst.type_info()) {
             (ColumnData::Bit(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::Bitn =>

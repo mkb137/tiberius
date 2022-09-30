@@ -40,7 +40,7 @@ where
     }
 
     pub(crate) async fn flush_done(self) -> crate::Result<TokenDone> {
-        log::trace!("flush_done");
+        log::debug!("flush_done");
         let mut stream = self.try_unfold();
 
         let mut routing = None;
@@ -62,7 +62,7 @@ where
 
     #[cfg(any(windows, feature = "integrated-auth-gssapi"))]
     pub(crate) async fn flush_sspi(self) -> crate::Result<TokenSspi> {
-        log::trace!("flush_sspi");
+        log::debug!("flush_sspi");
         let mut stream = self.try_unfold();
 
         loop {
@@ -75,6 +75,7 @@ where
     }
 
     async fn get_col_metadata(&mut self) -> crate::Result<ReceivedToken> {
+        log::debug!("get_col_metadata");
         let meta = Arc::new(TokenColMetaData::decode(self.conn).await?);
         self.conn.context_mut().set_last_meta(meta.clone());
 
@@ -84,6 +85,7 @@ where
     }
 
     async fn get_row(&mut self) -> crate::Result<ReceivedToken> {
+        log::debug!("get_row");
         let return_value = TokenRow::decode(self.conn).await?;
 
         log::trace!("return_value = {:?}", return_value);
@@ -91,6 +93,7 @@ where
     }
 
     async fn get_nbc_row(&mut self) -> crate::Result<ReceivedToken> {
+        log::debug!("get_nbc_row");
         let return_value = TokenRow::decode_nbc(self.conn).await?;
 
         log::trace!("return_value = {:?}", return_value);
@@ -98,17 +101,20 @@ where
     }
 
     async fn get_return_value(&mut self) -> crate::Result<ReceivedToken> {
+        log::debug!("get_return_value");
         let return_value = TokenReturnValue::decode(self.conn).await?;
         log::trace!("return_value = {:?}", return_value);
         Ok(ReceivedToken::ReturnValue(return_value))
     }
 
     async fn get_return_status(&mut self) -> crate::Result<ReceivedToken> {
+        log::debug!("get_return_status");
         let status = self.conn.read_u32_le().await?;
         Ok(ReceivedToken::ReturnStatus(status))
     }
 
     async fn get_error(&mut self) -> crate::Result<ReceivedToken> {
+        log::debug!("get_error");
         let err = TokenError::decode(self.conn).await?;
         log::error!("message = {}, code = {:?}", err.message, err.code);
 
@@ -116,30 +122,35 @@ where
     }
 
     async fn get_order(&mut self) -> crate::Result<ReceivedToken> {
+        log::debug!("get_order");
         let order = TokenOrder::decode(self.conn).await?;
         log::trace!("order = {:?}", order);
         Ok(ReceivedToken::Order(order))
     }
 
     async fn get_done_value(&mut self) -> crate::Result<ReceivedToken> {
+        log::debug!("get_done_value");
         let done = TokenDone::decode(self.conn).await?;
         log::trace!("done = {:?}", done);
         Ok(ReceivedToken::Done(done))
     }
 
     async fn get_done_proc_value(&mut self) -> crate::Result<ReceivedToken> {
+        log::debug!("get_done_proc_value");
         let done = TokenDone::decode(self.conn).await?;
         log::trace!("done = {:?}", done);
         Ok(ReceivedToken::DoneProc(done))
     }
 
     async fn get_done_in_proc_value(&mut self) -> crate::Result<ReceivedToken> {
+        log::debug!("get_done_in_proc_value");
         let done = TokenDone::decode(self.conn).await?;
         log::trace!("done = {:?}", done);
         Ok(ReceivedToken::DoneInProc(done))
     }
 
     async fn get_env_change(&mut self) -> crate::Result<ReceivedToken> {
+        log::debug!("get_env_change");
         let change = TokenEnvChange::decode(self.conn).await?;
 
         match change {
@@ -163,30 +174,35 @@ where
     }
 
     async fn get_info(&mut self) -> crate::Result<ReceivedToken> {
+        log::debug!("get_info");
         let info = TokenInfo::decode(self.conn).await?;
         log::trace!("info.messag = {:?}", info.message);
         Ok(ReceivedToken::Info(info))
     }
 
     async fn get_login_ack(&mut self) -> crate::Result<ReceivedToken> {
+        log::debug!("get_login_ack");
         let ack = TokenLoginAck::decode(self.conn).await?;
         log::trace!("{} version {:?}", ack.prog_name, ack.version);
         Ok(ReceivedToken::LoginAck(ack))
     }
 
     async fn get_feature_ext_ack(&mut self) -> crate::Result<ReceivedToken> {
+        log::debug!("get_feature_ext_ack");
         let ack = TokenFeatureExtAck::decode(self.conn).await?;
         log::trace!("FeatureExtAck with {} features", ack.features.len());
         Ok(ReceivedToken::FeatureExtAck(ack))
     }
 
     async fn get_sspi(&mut self) -> crate::Result<ReceivedToken> {
+        log::debug!("get_sspi");
         let sspi = TokenSspi::decode_async(self.conn).await?;
         log::trace!("SSPI response");
         Ok(ReceivedToken::Sspi(sspi))
     }
 
     pub fn try_unfold(self) -> BoxStream<'a, crate::Result<ReceivedToken>> {
+        log::debug!("try_unfold");
         let stream = futures::stream::try_unfold(self, |mut this| async move {
             if this.conn.is_eof() {
                 return Ok(None);
@@ -196,7 +212,7 @@ where
 
             let ty = TokenType::try_from(ty_byte)
                 .map_err(|_| Error::Protocol(format!("invalid token type {:x}", ty_byte).into()))?;
-
+            log::debug!(" - token type = {:?}", ty);
             let token = match ty {
                 TokenType::ReturnStatus => this.get_return_status().await?,
                 TokenType::ColMetaData => this.get_col_metadata().await?,
