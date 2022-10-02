@@ -96,10 +96,36 @@ impl<'a> Encode<BytesMut> for TokenRpcRequest<'a> {
         log::debug!(" - encoding header");
         dst.put_u32_le(ALL_HEADERS_LEN_TX as u32);
         dst.put_u32_le(ALL_HEADERS_LEN_TX as u32 - 4);
+        log::debug!(" - ALL_HEADERS_LEN_TX = {:?}", ALL_HEADERS_LEN_TX);
+
+        log::debug!(" - {:?} bytes in dest", dst.len());
+        for chunk in dst.chunks(16) {
+            log::warn!("{:?}", hex::encode(chunk))
+        }
+
         dst.put_u16_le(AllHeaderTy::TransactionDescriptor as u16);
+        log::debug!(" - transaction descriptor header = {:?}", AllHeaderTy::TransactionDescriptor as u16);
+
+        log::debug!(" - {:?} bytes in dest", dst.len());
+        for chunk in dst.chunks(16) {
+            log::warn!("{:?}", hex::encode(chunk))
+        }
+
         dst.put_slice(&self.transaction_desc);
+        log::debug!(" - transaction descriptor = {:?}", &self.transaction_desc);
+
+        log::debug!(" - {:?} bytes in dest", dst.len());
+        for chunk in dst.chunks(16) {
+            log::warn!("{:?}", hex::encode(chunk))
+        }
+
+        log::debug!(" - writing 1");
         dst.put_u32_le(1);
 
+        log::debug!(" - {:?} bytes in dest", dst.len());
+        for chunk in dst.chunks(16) {
+            log::warn!("{:?}", hex::encode(chunk))
+        }
         match self.proc_id {
             RpcProcIdValue::Id(ref id) => {
                 let val = (0xffff_u32) | ((*id as u16) as u32) << 16;
