@@ -4,6 +4,7 @@ use bytes::{BufMut, BytesMut};
 use std::borrow::{Borrow, BorrowMut};
 use std::ops::{Deref, DerefMut};
 
+#[derive(Debug)]
 pub(crate) struct BytesMutWithTypeInfo<'a> {
     bytes: &'a mut BytesMut,
     type_info: Option<&'a TypeInfo>,

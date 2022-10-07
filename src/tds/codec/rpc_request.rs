@@ -181,13 +181,23 @@ impl<'a> Encode<BytesMut> for RpcParam<'a> {
             dst.put_u16_le(codepoint);
         }
         log::debug!(" - wrote name - {:?} bytes in dst", dst.len());
+        for chunk in dst.chunks(16) {
+            log::warn!("{:?}", hex::encode(chunk))
+        }
 
         dst.put_u8(self.flags.bits());
         log::debug!(" - wrote flags - {:?} bytes in dst", dst.len());
+        for chunk in dst.chunks(16) {
+            log::warn!("{:?}", hex::encode(chunk))
+        }
 
         let mut dst_fi = BytesMutWithTypeInfo::new(dst);
+        log::debug!(" - dst_fi.type = {:?}", dst_fi.type_info());
         self.value.encode(&mut dst_fi)?;
         log::debug!(" - wrote value - {:?} bytes in dst", dst.len());
+        for chunk in dst.chunks(16) {
+            log::warn!("{:?}", hex::encode(chunk))
+        }
 
         let dst: &mut [u8] = dst.borrow_mut();
         dst[len_pos] = length;

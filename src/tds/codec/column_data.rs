@@ -150,6 +150,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
             (ColumnData::Bit(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::Bitn =>
             {
+                log::debug!(" - encoding bit 1");
                 if let Some(val) = opt {
                     dst.put_u8(1);
                     dst.put_u8(val as u8);
@@ -158,9 +159,11 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 }
             }
             (ColumnData::Bit(Some(val)), Some(TypeInfo::FixedLen(FixedLenType::Bit))) => {
+                log::debug!(" - encoding bit 2");
                 dst.put_u8(val as u8);
             }
             (ColumnData::Bit(Some(val)), None) => {
+                log::debug!(" - encoding bit 3");
                 // if TypeInfo was not given, encode a TypeInfo
                 // the first 1 is part of TYPE_INFO
                 // the second 1 is part of TYPE_VARBYTE
@@ -171,6 +174,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
             (ColumnData::U8(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::Intn =>
             {
+                log::debug!(" - encoding u8 1");
                 if let Some(val) = opt {
                     dst.put_u8(1);
                     dst.put_u8(val);
@@ -179,19 +183,23 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 }
             }
             (ColumnData::U8(Some(val)), Some(TypeInfo::FixedLen(FixedLenType::Int1))) => {
+                log::debug!(" - encoding u8 2");
                 dst.put_u8(val);
             }
             (ColumnData::U8(Some(val)), None) => {
+                log::debug!(" - encoding u8 3");
                 let header = [VarLenType::Intn as u8, 1, 1];
                 dst.extend_from_slice(&header);
                 dst.put_u8(val);
             }
             (ColumnData::I16(Some(val)), Some(TypeInfo::FixedLen(FixedLenType::Int2))) => {
+                log::debug!(" - encoding i16 1");
                 dst.put_i16_le(val);
             }
             (ColumnData::I16(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::Intn =>
             {
+                log::debug!(" - encoding i16 2");
                 if let Some(val) = opt {
                     dst.put_u8(2);
                     dst.put_i16_le(val);
@@ -200,17 +208,20 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 }
             }
             (ColumnData::I16(Some(val)), None) => {
+                log::debug!(" - encoding i16 3");
                 let header = [VarLenType::Intn as u8, 2, 2];
                 dst.extend_from_slice(&header);
 
                 dst.put_i16_le(val);
             }
             (ColumnData::I32(Some(val)), Some(TypeInfo::FixedLen(FixedLenType::Int4))) => {
+                log::debug!(" - encoding i32 1");
                 dst.put_i32_le(val);
             }
             (ColumnData::I32(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::Intn =>
             {
+                log::debug!(" - encoding i32 2");
                 if let Some(val) = opt {
                     dst.put_u8(4);
                     dst.put_i32_le(val);
@@ -219,16 +230,19 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 }
             }
             (ColumnData::I32(Some(val)), None) => {
+                log::debug!(" - encoding i32 3");
                 let header = [VarLenType::Intn as u8, 4, 4];
                 dst.extend_from_slice(&header);
                 dst.put_i32_le(val);
             }
             (ColumnData::I64(Some(val)), Some(TypeInfo::FixedLen(FixedLenType::Int8))) => {
+                log::debug!(" - encoding i64 1");
                 dst.put_i64_le(val);
             }
             (ColumnData::I64(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::Intn =>
             {
+                log::debug!(" - encoding i64 2");
                 if let Some(val) = opt {
                     dst.put_u8(8);
                     dst.put_i64_le(val);
@@ -237,16 +251,19 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 }
             }
             (ColumnData::I64(Some(val)), None) => {
+                log::debug!(" - encoding i64 3");
                 let header = [VarLenType::Intn as u8, 8, 8];
                 dst.extend_from_slice(&header);
                 dst.put_i64_le(val);
             }
             (ColumnData::F32(Some(val)), Some(TypeInfo::FixedLen(FixedLenType::Float4))) => {
+                log::debug!(" - encoding f32 1");
                 dst.put_f32_le(val);
             }
             (ColumnData::F32(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::Floatn =>
             {
+                log::debug!(" - encoding f32 2");
                 if let Some(val) = opt {
                     dst.put_u8(4);
                     dst.put_f32_le(val);
@@ -255,16 +272,19 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 }
             }
             (ColumnData::F32(Some(val)), None) => {
+                log::debug!(" - encoding f32 3");
                 let header = [VarLenType::Floatn as u8, 4, 4];
                 dst.extend_from_slice(&header);
                 dst.put_f32_le(val);
             }
             (ColumnData::F64(Some(val)), Some(TypeInfo::FixedLen(FixedLenType::Float8))) => {
+                log::debug!(" - encoding f64 1");
                 dst.put_f64_le(val);
             }
             (ColumnData::F64(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::Floatn =>
             {
+                log::debug!(" - encoding f64 2");
                 if let Some(val) = opt {
                     dst.put_u8(8);
                     dst.put_f64_le(val);
@@ -273,6 +293,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 }
             }
             (ColumnData::F64(Some(val)), None) => {
+                log::debug!(" - encoding f64 3");
                 let header = [VarLenType::Floatn as u8, 8, 8];
                 dst.extend_from_slice(&header);
                 dst.put_f64_le(val);
@@ -280,6 +301,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
             (ColumnData::Guid(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::Guid =>
             {
+                log::debug!(" - encoding guid 1");
                 if let Some(uuid) = opt {
                     dst.put_u8(16);
 
@@ -291,6 +313,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 }
             }
             (ColumnData::Guid(Some(uuid)), None) => {
+                log::debug!(" - encoding guid 2");
                 let header = [VarLenType::Guid as u8, 16, 16];
                 dst.extend_from_slice(&header);
 
@@ -302,6 +325,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 if vlc.r#type() == VarLenType::BigChar
                     || vlc.r#type() == VarLenType::BigVarChar =>
             {
+                log::debug!(" - encoding string 1");
                 if let Some(str) = opt {
                     let encoder = vlc.collation().as_ref().unwrap().encoding()?;
                     let bytes = encoder
@@ -346,6 +370,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
             (ColumnData::String(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::NVarchar || vlc.r#type() == VarLenType::NChar =>
             {
+                log::debug!(" - encoding string 2");
                 if let Some(str) = opt {
                     if vlc.len() < 0xffff {
                         let len_pos = dst.len();
@@ -414,6 +439,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 }
             }
             (ColumnData::String(Some(ref s)), None) if s.len() <= 4000 => {
+                log::debug!(" - encoding string 3");
                 dst.put_u8(VarLenType::NVarchar as u8);
                 dst.put_u16_le(8000);
                 dst.extend_from_slice(&[0u8; 5][..]);
@@ -436,6 +462,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 }
             }
             (ColumnData::String(Some(ref s)), None) => {
+                log::debug!(" - encoding string 4");
                 // length: 0xffff and raw collation
                 dst.put_u8(VarLenType::NVarchar as u8);
                 dst.extend_from_slice(&[0xff_u8; 2]);
@@ -470,6 +497,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 if vlc.r#type() == VarLenType::BigBinary
                     || vlc.r#type() == VarLenType::BigVarBin =>
             {
+                log::debug!(" - encoding binary 1");
                 if let Some(bytes) = opt {
                     if bytes.len() > vlc.len() {
                         return Err(crate::Error::BulkInput(
@@ -499,12 +527,14 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 }
             }
             (ColumnData::Binary(Some(bytes)), None) if bytes.len() <= 8000 => {
+                log::debug!(" - encoding binary 2");
                 dst.put_u8(VarLenType::BigVarBin as u8);
                 dst.put_u16_le(8000);
                 dst.put_u16_le(bytes.len() as u16);
                 dst.extend(bytes.into_owned());
             }
             (ColumnData::Binary(Some(bytes)), None) => {
+                log::debug!(" - encoding binary 3");
                 dst.put_u8(VarLenType::BigVarBin as u8);
                 // Max length
                 dst.put_u16_le(0xffff_u16);
@@ -520,6 +550,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
             (ColumnData::DateTime(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::Datetimen =>
             {
+                log::debug!(" - encoding datetime 1");
                 if let Some(dt) = opt {
                     dst.put_u8(8);
                     dt.encode(dst)?;
@@ -528,15 +559,18 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 }
             }
             (ColumnData::DateTime(Some(dt)), Some(TypeInfo::FixedLen(FixedLenType::Datetime))) => {
+                log::debug!(" - encoding datetime 2");
                 dt.encode(dst)?;
             }
             (ColumnData::DateTime(Some(dt)), None) => {
+                log::debug!(" - encoding datetime 3");
                 dst.extend_from_slice(&[VarLenType::Datetimen as u8, 8, 8]);
                 dt.encode(&mut *dst)?;
             }
             (ColumnData::SmallDateTime(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::Datetimen =>
             {
+                log::debug!(" - encoding smalldatetime 1");
                 if let Some(dt) = opt {
                     dst.put_u8(4);
                     dt.encode(dst)?;
@@ -548,9 +582,11 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 ColumnData::SmallDateTime(Some(dt)),
                 Some(TypeInfo::FixedLen(FixedLenType::Datetime4)),
             ) => {
+                log::debug!(" - encoding smalldatetime 2");
                 dt.encode(dst)?;
             }
             (ColumnData::SmallDateTime(Some(dt)), None) => {
+                log::debug!(" - encoding smalldatetime 3");
                 dst.extend_from_slice(&[VarLenType::Datetimen as u8, 4, 4]);
                 dt.encode(&mut *dst)?;
             }
@@ -558,6 +594,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
             (ColumnData::Date(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::Daten =>
             {
+                log::debug!(" - encoding date 1");
                 if let Some(dt) = opt {
                     dst.put_u8(3);
                     dt.encode(dst)?;
@@ -567,6 +604,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
             }
             #[cfg(feature = "tds73")]
             (ColumnData::Date(Some(date)), None) => {
+                log::debug!(" - encoding date 2");
                 dst.extend_from_slice(&[VarLenType::Daten as u8, 3]);
                 date.encode(&mut *dst)?;
             }
@@ -574,6 +612,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
             (ColumnData::Time(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::Timen =>
             {
+                log::debug!(" - encoding time 1");
                 if let Some(time) = opt {
                     dst.put_u8(time.len()?);
                     time.encode(dst)?;
@@ -583,6 +622,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
             }
             #[cfg(feature = "tds73")]
             (ColumnData::Time(Some(time)), None) => {
+                log::debug!(" - encoding time 2");
                 dst.extend_from_slice(&[VarLenType::Timen as u8, time.scale(), time.len()?]);
                 time.encode(&mut *dst)?;
             }
@@ -590,6 +630,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
             (ColumnData::DateTime2(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::Datetime2 =>
             {
+                log::debug!(" - encoding datetime2 1");
                 if let Some(mut dt2) = opt {
                     if dt2.time().scale() != vlc.len() as u8 {
                         let time = dt2.time();
@@ -606,6 +647,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
             }
             #[cfg(feature = "tds73")]
             (ColumnData::DateTime2(Some(dt)), None) => {
+                log::debug!(" - encoding datetime2 2");
                 let len = dt.time().len()? + 3;
                 dst.extend_from_slice(&[VarLenType::Datetime2 as u8, dt.time().scale(), len]);
                 dt.encode(&mut *dst)?;
@@ -614,6 +656,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
             (ColumnData::DateTimeOffset(opt), Some(TypeInfo::VarLenSized(vlc)))
                 if vlc.r#type() == VarLenType::DatetimeOffsetn =>
             {
+                log::debug!(" - encoding datetimeoffset 1");
                 if let Some(dto) = opt {
                     dst.put_u8(dto.datetime2().time().len()? + 5);
                     dto.encode(dst)?;
@@ -623,6 +666,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
             }
             #[cfg(feature = "tds73")]
             (ColumnData::DateTimeOffset(Some(dto)), None) => {
+                log::debug!(" - encoding datetimeoffset 2");
                 let headers = [
                     VarLenType::DatetimeOffsetn as u8,
                     dto.datetime2().time().scale(),
@@ -633,6 +677,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 dto.encode(&mut *dst)?;
             }
             (ColumnData::Xml(opt), Some(TypeInfo::Xml { .. })) => {
+                log::debug!(" - encoding xml 1");
                 if let Some(xml) = opt {
                     xml.into_owned().encode(dst)?;
                 } else {
@@ -640,6 +685,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 }
             }
             (ColumnData::Xml(Some(xml)), None) => {
+                log::debug!(" - encoding xml 2");
                 dst.put_u8(VarLenType::Xml as u8);
                 dst.put_u8(0);
                 xml.into_owned().encode(&mut *dst)?;
@@ -647,6 +693,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
             (ColumnData::Numeric(opt), Some(TypeInfo::VarLenSizedPrecision { ty, scale, .. }))
                 if ty == &VarLenType::Numericn || ty == &VarLenType::Decimaln =>
             {
+                log::debug!(" - encoding numeric 1");
                 if let Some(num) = opt {
                     if scale != &num.scale() {
                         todo!("this still need some work, if client scale not aligned with server, we need to do conversion but will lose precision")
@@ -657,6 +704,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 }
             }
             (ColumnData::Numeric(Some(num)), None) => {
+                log::debug!(" - encoding numeric 2");
                 let headers = &[
                     VarLenType::Numericn as u8,
                     num.len(),
@@ -668,6 +716,7 @@ impl<'a> Encode<BytesMutWithTypeInfo<'a>> for ColumnData<'a> {
                 num.encode(&mut *dst)?;
             }
             (_, None) => {
+                log::debug!(" - encoding null");
                 // None/null
                 dst.put_u8(FixedLenType::Null as u8);
             }
