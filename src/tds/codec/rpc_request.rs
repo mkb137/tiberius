@@ -96,10 +96,37 @@ impl<'a> Encode<BytesMut> for TokenRpcRequest<'a> {
         log::debug!(" - encoding header");
         dst.put_u32_le(ALL_HEADERS_LEN_TX as u32);
         dst.put_u32_le(ALL_HEADERS_LEN_TX as u32 - 4);
+        log::debug!(" - ALL_HEADERS_LEN_TX = {:?}", ALL_HEADERS_LEN_TX);
+
+        log::debug!(" - {:?} bytes in dest", dst.len());
+        for chunk in dst.chunks(16) {
+            log::warn!("{:?}", hex::encode(chunk))
+        }
+
         dst.put_u16_le(AllHeaderTy::TransactionDescriptor as u16);
+        log::debug!(" - transaction descriptor header = {:?}", AllHeaderTy::TransactionDescriptor as u16);
+
+        log::debug!(" - {:?} bytes in dest", dst.len());
+        for chunk in dst.chunks(16) {
+            log::warn!("{:?}", hex::encode(chunk))
+        }
+
         dst.put_slice(&self.transaction_desc);
+        log::debug!(" - transaction descriptor = {:?}", &self.transaction_desc);
+
+        log::debug!(" - {:?} bytes in dest", dst.len());
+        for chunk in dst.chunks(16) {
+            log::warn!("{:?}", hex::encode(chunk))
+        }
+
+        log::debug!(" - writing 1");
         dst.put_u32_le(1);
 
+        log::debug!(" - {:?} bytes in dest", dst.len());
+        for chunk in dst.chunks(16) {
+            log::warn!("{:?}", hex::encode(chunk))
+        }
+        log::debug!(" - writing proc ID {:?}", self.proc_id);
         match self.proc_id {
             RpcProcIdValue::Id(ref id) => {
                 let val = (0xffff_u32) | ((*id as u16) as u32) << 16;
@@ -111,11 +138,28 @@ impl<'a> Encode<BytesMut> for TokenRpcRequest<'a> {
                 todo!()
             }
         }
+        log::debug!(" - {:?} bytes in dest", dst.len());
+        for chunk in dst.chunks(16) {
+            log::warn!("{:?}", hex::encode(chunk))
+        }
 
+        log::debug!(" - writing flags");
         dst.put_u16_le(self.flags.bits() as u16);
+        log::debug!(" - {:?} bytes in dest", dst.len());
+        for chunk in dst.chunks(16) {
+            log::warn!("{:?}", hex::encode(chunk))
+        }
+
         log::debug!(" - encoding params");
+        let mut i = 0u32;
         for param in self.params.into_iter() {
+            log::debug!(" - encoding param {:?}", i);
             param.encode(dst)?;
+            i = i + 1;
+            log::debug!(" - {:?} bytes in dest", dst.len());
+            for chunk in dst.chunks(16) {
+                log::warn!("{:?}", hex::encode(chunk))
+            }
         }
         log::debug!(" - done encode");
 
@@ -131,7 +175,7 @@ impl<'a> Encode<BytesMut> for RpcParam<'a> {
         let mut length = 0u8;
 
         dst.put_u8(length);
-        log::debug!(" - writing name - {:?} bytes in dst", dst.len());
+        log::debug!(" - writing name {:?} - {:?} bytes in dst", self.name, dst.len());
         for codepoint in self.name.encode_utf16() {
             length += 1;
             dst.put_u16_le(codepoint);

@@ -413,3 +413,174 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Client<S> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use async_std::net::TcpStream;
+    use super::*;
+    use bytes::{Bytes, BytesMut};
+    use crate::{Encode, IntoSql};
+
+    fn encode_query<'b>(
+        query: impl Into<Cow<'b, str>>,
+        params: &'b [&'b dyn ToSql],
+    ) -> anyhow::Result<()> {
+        let mut rpc_params: Vec<RpcParam> = Client::<TcpStream>::rpc_params(query);
+
+        let proc_id = RpcProcId::ExecuteSQL;
+
+        let params = params.iter().map(|p| p.to_sql());
+        let mut param_str = String::new();
+        for (i, param) in params.enumerate() {
+            log::debug!(" - adding param {:?}, type = {:?}", i, &param.type_name());
+            if i > 0 {
+                param_str.push(',')
+            }
+            param_str.push_str(&format!("@P{} ", i + 1));
+            param_str.push_str(&param.type_name());
+
+            rpc_params.push(RpcParam {
+                name: Cow::Owned(format!("@P{}", i + 1)),
+                flags: BitFlags::empty(),
+                value: param,
+            });
+        }
+        log::debug!(" - finding 'params' param");
+        if let Some(params) = rpc_params.iter_mut().find(|x| x.name == "params") {
+            log::debug!(" - updating 'params' param value to {:?}", param_str);
+            params.value = ColumnData::String(Some(param_str.into()));
+        }
+        let transaction_desc = [0;8];
+        log::debug!(" - creating RPC request");
+        let req = TokenRpcRequest::new(
+            proc_id,
+            rpc_params,
+            transaction_desc,
+        );
+        let mut bytes = BytesMut::new();
+        req.encode(&mut bytes)?;
+
+        log::warn!("encoded to bytes:");
+        for chunk in bytes.chunks(16) {
+            log::warn!("{:?}", hex::encode(chunk))
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    pub async fn test_rpc_bit() -> anyhow::Result<()>{
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
+        log::warn!("test_rpc_bit");
+        let sql = "select @P1";
+        let params: [&dyn ToSql; 1] = [
+            &false
+        ];
+        encode_query(sql, &params)?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    pub async fn test_rpc_u8() -> anyhow::Result<()>{
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
+        log::warn!("test_rpc_u8");
+        let sql = "select @P1";
+        let params: [&dyn ToSql; 1] = [
+            &1u8
+        ];
+        encode_query(sql, &params)?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    pub async fn test_rpc_i16() -> anyhow::Result<()>{
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
+        log::warn!("test_rpc_i16");
+        let sql = "select @P1";
+        let params: [&dyn ToSql; 1] = [
+            &i16::MAX
+        ];
+        encode_query(sql, &params)?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    pub async fn test_rpc_i32() -> anyhow::Result<()>{
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
+        log::warn!("test_rpc_i32");
+        let sql = "select @P1";
+        let params: [&dyn ToSql; 1] = [
+            &i32::MAX
+        ];
+        encode_query(sql, &params)?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    pub async fn test_rpc_i64() -> anyhow::Result<()>{
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
+        log::warn!("test_rpc_i64");
+        let sql = "select @P1";
+        let params: [&dyn ToSql; 1] = [
+            &i64::MAX
+        ];
+        encode_query(sql, &params)?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    pub async fn test_rpc_f32() -> anyhow::Result<()>{
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
+        log::warn!("test_rpc_f32");
+        let sql = "select @P1";
+        let params: [&dyn ToSql; 1] = [
+            &f32::MAX
+        ];
+        encode_query(sql, &params)?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    pub async fn test_rpc_f64() -> anyhow::Result<()>{
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
+        log::warn!("test_rpc_f64");
+        let sql = "select @P1";
+        let params: [&dyn ToSql; 1] = [
+            &f64::MAX
+        ];
+        encode_query(sql, &params)?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    pub async fn test_rpc_string() -> anyhow::Result<()>{
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
+        log::warn!("test_rpc_string");
+        let sql = "select @P1";
+        let params: [&dyn ToSql; 1] = [
+            &("abcd".to_string())
+        ];
+        encode_query(sql, &params)?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    pub async fn test_rpc_0() -> anyhow::Result<()>{
+        log4rs::init_file("log4rs.yaml", Default::default()).unwrap_or(());
+        log::warn!("test_rpc_0");
+        let sql = "select @P1, @P2, @P3, @P4, @P5, @P6, @P7, @P8, @P9";
+        let params: [&dyn ToSql; 9] = [
+            &false,
+            &2u8,
+            &3i16,
+            &4i32,
+            &5i64,
+            &6.123456789f32,
+            &7.123456789f64,
+            &"8abc",
+            &("9def".to_string()),
+        ];
+        encode_query(sql, &params)?;
+        Ok(())
+    }
+
+}
